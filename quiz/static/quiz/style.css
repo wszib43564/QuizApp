@@ -1,0 +1,203 @@
+body {
+    background: #f4f7fb;
+    color: #1e293b;
+    min-height: 100vh;
+}
+
+.navbar { background: #0f172a !important; box-shadow: 0 2px 12px rgba(15, 23, 42, 0.12); }
+.navbar-brand { font-weight: 700; letter-spacing: 0.2px; }
+.nav-link {
+    border-radius: 8px;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+}
+.nav-link:hover { background: rgba(255, 255, 255, 0.08); }
+
+main { min-height: calc(100vh - 150px); }
+.container { max-width: 1180px; }
+
+.card {
+    border: 0;
+    border-radius: 18px;
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
+}
+
+.btn {
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 10px 18px;
+}
+
+.btn-primary { background: #2563eb; border-color: #2563eb; }
+.btn-success { background: #16a34a; border-color: #16a34a; }
+
+.naglowek-strony { margin-bottom: 30px; }
+.naglowek-strony h1,
+.naglowek-strony h2 { font-weight: 700; margin-bottom: 6px; }
+
+.karta-statystyki,
+.karta-quizu,
+.karta-nagrody { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.karta-statystyki:hover,
+.karta-quizu:hover,
+.karta-nagrody:hover { transform: translateY(-3px); box-shadow: 0 14px 35px rgba(15, 23, 42, 0.10); }
+
+.wartosc-statystyki { font-size: 2rem; font-weight: 700; }
+
+.karta-powitalna {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 56px;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+}
+
+.etykieta-powitalna {
+    display: inline-block;
+    background: #eff6ff;
+    color: #2563eb;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-weight: 700;
+}
+
+.panel-powitalny {
+    background: #f8fafc;
+    border: 1px solid #e5eaf2;
+    border-radius: 18px;
+    padding: 28px;
+}
+
+.obszar-quizu { max-width: 850px; margin: 0 auto; }
+
+.informacje-quizu {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    color: #64748b;
+}
+
+.karta-pytania { padding: 8px; }
+
+.tresc-pytania {
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.opcja-odpowiedzi {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #dfe5ee;
+    border-radius: 12px;
+    padding: 15px 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s ease,
+                background 0.15s ease,
+                transform 0.15s ease;
+}
+
+.opcja-odpowiedzi:hover {
+    background: #f8faff;
+    border-color: #93b4ff;
+    transform: translateY(-1px);
+}
+
+.opcja-odpowiedzi:has(.form-check-input:checked) { border-color: #2563eb; background: #eff6ff; }
+
+.form-check-input { cursor: pointer; flex: 0 0 auto; }
+
+.karta-czasu {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 14px 18px;
+    text-align: center;
+    border: 1px solid #e5eaf2;
+}
+
+.etykieta-czasu { color: #64748b; font-size: 0.85rem; }
+.wartosc-czasu {
+    font-size: 1.55rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.progress {
+    height: 8px;
+    border-radius: 20px;
+    background: #e8edf5;
+}
+
+.progress-bar { border-radius: 20px; }
+.badge { border-radius: 8px; padding: 7px 10px; }
+
+.ikona-wyniku {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #dcfce7;
+    color: #16a34a;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.pole-wyniku {
+    height: 100%;
+    border: 1px solid #e5eaf2;
+    border-radius: 14px;
+    padding: 20px;
+}
+
+.liczba-wyniku { font-size: 2rem; font-weight: 700; }
+.koszt-nagrody { font-size: 1.35rem; font-weight: 700; }
+.kod-nagrody {
+    border: 1px dashed #94a3b8;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.table { margin-bottom: 0; }
+.table th {
+    color: #64748b;
+    font-weight: 600;
+    border-top: 0;
+}
+
+.table td { vertical-align: middle; }
+footer { color: #94a3b8; }
+
+@media (max-width: 768px) {
+    .container {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .card {
+        border-radius: 14px;
+    }
+
+    .karta-powitalna {
+        padding: 28px 20px;
+    }
+
+    .tresc-pytania {
+        font-size: 1.15rem;
+    }
+
+    .wartosc-statystyki {
+        font-size: 1.7rem;
+    }
+
+    .kod-nagrody {
+        font-size: 1.25rem;
+    }
+}
