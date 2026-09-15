@@ -1,10 +1,20 @@
 {% extends 'quiz/base.html' %}
-{% block title %}Start - Quiz App{% endblock %}
 {% block content %}
+
 <div class="container py-5">
-    <div class="card"><div class="card-body p-5">
-        <h1>Quiz App</h1>
-        <p class="lead mb-0">Aplikacja quizowa przygotowana w Django.</p>
-    </div></div>
+    <div class="card">
+        <div class="card-body p-5">
+            
+            <h1>Quiz App</h1>
+            
+            {% if user.is_authenticated %}
+            <p>Witaj, <strong>{{ user.username }}</strong>.</p>
+            <p>Twoje punkty: <strong>{{ profil.points }}</strong></p>{% else %}
+            <p class="lead">Zaloguj się lub utwórz konto, aby korzystać z aplikacji.</p>
+            
+            {% endif %}
+        </div>
+    </div>
 </div>
+
 {% endblock %}
