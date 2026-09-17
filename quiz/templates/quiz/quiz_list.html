@@ -3,30 +3,45 @@
 
 <div class="container py-5">
     <h2>Quizy</h2>
-    
+
     <div class="row g-3">
-        {% for quiz in quizy %}
+        {% for element in elementy_quizow %}
         <div class="col-md-6">
+            
             <div class="card">
                 <div class="card-body">
-                    
-                    <h4>{{ quiz.title }}</h4>
-                    
-                    <p>{{ quiz.description }}</p>
-                    
-                    <form method="post" action="{% url 'rozpocznij_quiz' quiz.id %}">
-                        {% csrf_token %}
+                    <h4>{{ element.quiz.title }}</h4>
+                    <p>{{ element.quiz.description }}</p>
+                    <p>
+                        {% if element.bedzie_punktowane %}
                         
-                        <button class="btn btn-primary">Rozpocznij</button>
-                    </form>
+                        <span class="badge bg-success">Podejście punktowane</span>
+                        
+                        {% else %}<span class="badge bg-secondary">
+                            
+                            Bez zmiany salda</span>
+                            
+                            {% endif %}</p>
+                            
+                            <form method="post" action="{% url 'rozpocznij_quiz' element.quiz.id %}">
+                                
+                                {% csrf_token %}
+                                
+                                <button class="btn btn-primary">
+                                    {% if element.ma_aktywne_podejscie %}Kontynuuj{% else %}Rozpocznij{% endif %}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
+                
+                {% empty %}
+                
+                <p>Brak quizów.</p>
+                
+                {% endfor %}
+            
             </div>
         </div>
-        {% empty %}
-        <p>Brak quizów.</p>
-        
-        {% endfor %}
-    </div>
-</div>
 
 {% endblock %}
