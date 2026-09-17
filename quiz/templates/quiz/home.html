@@ -4,13 +4,19 @@
 <div class="container py-5">
     <div class="card">
         <div class="card-body p-5">
-            
+
             <h1>Quiz App</h1>
             
             {% if user.is_authenticated %}
-            <p>Witaj, <strong>{{ user.username }}</strong>.</p>
-            <p>Twoje punkty: <strong>{{ profil.points }}</strong></p>{% else %}
-            <p class="lead">Zaloguj się lub utwórz konto, aby korzystać z aplikacji.</p>
+            <p>Witaj, <strong>{{ user.username }}</strong>. Masz <strong>{{ profil.points }} pkt</strong>.</p>
+            
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-primary" href="{% url 'lista_quizow' %}">Rozwiąż quiz</a>
+                <a class="btn btn-outline-primary" href="{% url 'historia_quizow' %}">Historia</a>
+            </div>
+            {% else %}
+
+            <p class="lead">Zaloguj się, aby rozwiązywać quizy i zdobywać punkty.</p>
             
             {% endif %}
         </div>

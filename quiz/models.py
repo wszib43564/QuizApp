@@ -1,10 +1,11 @@
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator
 from django.db import models
 
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    points = models.IntegerField(default=0)
+    points = models.IntegerField(default=0, validators=[MinValueValidator(0)])
 
     def __str__(self):
         return self.user.username
@@ -62,7 +63,7 @@ class PointTransaction(models.Model):
 class Reward(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    cost_points = models.IntegerField()
+    cost_points = models.IntegerField(validators=[MinValueValidator(1)])
     is_active = models.BooleanField(default=True)
 
     def __str__(self):

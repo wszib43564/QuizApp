@@ -1,0 +1,17 @@
+{% extends 'quiz/base.html' %}
+{% block content %}
+
+<div class="container py-5">
+    <div class="card">
+        <div class="card-body p-5">
+            <h2>Wynik</h2>
+            <p>Quiz: <strong>{{ podejscie.quiz.title }}</strong></p>
+            
+            <p>Wynik punktowy: <strong>{% if podejscie.score != None %}{{ podejscie.score }}{% else %}{{ podejscie.point_score }}{% endif %} pkt</strong>
+            
+            </p><a class="btn btn-primary" href="{% url 'lista_quizow' %}">Wróć do quizów</a>
+        
+        </div>
+    </div>
+</div>
+{% endblock %}
