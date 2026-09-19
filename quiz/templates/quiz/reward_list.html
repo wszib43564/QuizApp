@@ -1,0 +1,45 @@
+{% extends 'quiz/base.html' %}
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="d-flex justify-content-between">
+        <h2>Nagrody</h2>
+        <strong>{{ profil.points }} pkt</strong>
+    </div>
+
+    <div class="row g-3 mt-1">
+
+        {% for n in nagrody %}
+
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+
+                    <h4>{{ n.name }}</h4>
+                    <p>{{ n.description }}</p>
+
+                    <p>Koszt: <strong>{{ n.cost_points }} pkt</strong></p>
+                    <p>Stan: {{ n.stock_quantity }}</p>
+
+                    {% if n.valid_until %}
+                        <p>Ważna do: {{ n.valid_until|date:"d.m.Y" }}</p>
+                    {% endif %}
+
+                    <form method="post" action="{% url 'odbierz_nagrode' n.id %}">
+                        {% csrf_token %}
+                        <button class="btn btn-success" {% if profil.points < n.cost_points %}disabled{% endif %}>Odbierz</button>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+        {% empty %}
+            <p>Brak dostępnych nagród.</p>
+        {% endfor %}
+
+    </div>
+</div>
+
+{% endblock %}

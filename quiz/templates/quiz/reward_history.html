@@ -1,0 +1,22 @@
+{% extends 'quiz/base.html' %}
+{% block content %}
+
+<div class="container py-5">
+    <h2>Moje nagrody</h2>
+
+    <div class="card">
+        <div class="card-body">
+
+            {% for r in realizacje_nagrod %}
+                <div class="border-bottom py-2">
+                    <strong>{{ r.reward.name }}</strong> — {{ r.cost_points }} pkt — {{ r.redeemed_at|date:"d.m.Y H:i" }}
+                </div>
+            {% empty %}
+                <p>Brak odebranych nagród.</p>
+            {% endfor %}
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from .forms import FormularzLogowania, FormularzRejestracji
-from .models import Answer, PointTransaction, Question, Quiz, QuizAttempt, UserProfile
+from .models import Answer, PointTransaction, Question, Quiz, QuizAttempt, Reward, RewardRedemption, UserProfile
 
 
 def _pozostaly_czas_quizu(podejscie):
@@ -147,3 +147,40 @@ def punkty(request):
 def historia_quizow(request):
     podejscia = QuizAttempt.objects.filter(user=request.user, completed_at__isnull=False).select_related("quiz").order_by("-completed_at")
     return render(request, "quiz/quiz_history.html", {"podejscia": podejscia})
+
+
+@login_required(login_url="logowanie")
+def lista_nagrod(request):
+    dzis = timezone.localdate()
+    profil, _ = UserProfile.objects.get_or_create(user=request.user)
+    nagrody = Reward.objects.filter(is_active=True, stock_quantity__gt=0).order_by("cost_points")
+    nagrody = [n for n in nagrody if not n.valid_until or n.valid_until >= dzis]
+    return render(request, "quiz/reward_list.html", {"profil": profil, "nagrody": nagrody})
+
+
+@login_required(login_url="logowanie")
+@require_POST
+def odbierz_nagrode(request, id_nagrody):
+    with transaction.atomic():
+        nagroda = get_object_or_404(Reward.objects.select_for_update(), id=id_nagrody, is_active=True)
+        profil, _ = UserProfile.objects.get_or_create(user=request.user)
+        profil = UserProfile.objects.select_for_update().get(id=profil.id)
+        if nagroda.stock_quantity <= 0:
+            messages.error(request, "Nagroda jest niedostępna."); return redirect("lista_nagrod")
+        if nagroda.valid_until and nagroda.valid_until < timezone.localdate():
+            messages.error(request, "Termin ważności nagrody minął."); return redirect("lista_nagrod")
+        if profil.points < nagroda.cost_points:
+            messages.error(request, "Masz za mało punktów."); return redirect("lista_nagrod")
+        koszt = nagroda.cost_points
+        profil.points -= koszt; profil.save(update_fields=["points"])
+        nagroda.stock_quantity -= 1; nagroda.save(update_fields=["stock_quantity"])
+        RewardRedemption.objects.create(user=request.user, reward=nagroda, cost_points=koszt)
+        PointTransaction.objects.create(user=request.user, points=-koszt, transaction_type="reward", description="Nagroda: " + nagroda.name)
+    messages.success(request, "Nagroda została odebrana.")
+    return redirect("historia_nagrod")
+
+
+@login_required(login_url="logowanie")
+def historia_nagrod(request):
+    realizacje = RewardRedemption.objects.filter(user=request.user).select_related("reward").order_by("-redeemed_at")
+    return render(request, "quiz/reward_history.html", {"realizacje_nagrod": realizacje})

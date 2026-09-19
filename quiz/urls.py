@@ -11,4 +11,7 @@ urlpatterns = [
     path("quizy/<int:id_quizu>/wynik/<int:id_podejscia>/", views.wynik_quizu, name="wynik_quizu"),
     path("punkty/", views.punkty, name="punkty"),
     path("historia/", views.historia_quizow, name="historia_quizow"),
+    path("nagrody/", views.lista_nagrod, name="lista_nagrod"),
+    path("nagrody/<int:id_nagrody>/odbierz/", views.odbierz_nagrode, name="odbierz_nagrode"),
+    path("historia-nagrod/", views.historia_nagrod, name="historia_nagrod"),
 ]

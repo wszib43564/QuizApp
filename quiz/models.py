@@ -79,6 +79,7 @@ class Reward(models.Model):
     description = models.TextField(blank=True)
     cost_points = models.IntegerField(validators=[MinValueValidator(1)])
     stock_quantity = models.PositiveIntegerField(default=0)
+    valid_until = models.DateField(null=True, blank=True, verbose_name="Ważna do")
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
