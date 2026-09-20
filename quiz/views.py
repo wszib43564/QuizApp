@@ -1,12 +1,15 @@
 import math
+import secrets
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-from .forms import FormularzLogowania, FormularzRejestracji
+from .forms import FormularzAdresuWysylki, FormularzLogowania, FormularzRejestracji
 from .models import Answer, PointTransaction, Question, Quiz, QuizAttempt, Reward, RewardRedemption, UserProfile
 
 
@@ -149,10 +152,17 @@ def historia_quizow(request):
     return render(request, "quiz/quiz_history.html", {"podejscia": podejscia})
 
 
+
+def generuj_kod_nagrody():
+    alfabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    while True:
+        kod = "QA-" + "".join(secrets.choice(alfabet) for _ in range(4)) + "-" + "".join(secrets.choice(alfabet) for _ in range(4))
+        if not RewardRedemption.objects.filter(redemption_code=kod).exists(): return kod
+
+
 @login_required(login_url="logowanie")
 def lista_nagrod(request):
-    dzis = timezone.localdate()
-    profil, _ = UserProfile.objects.get_or_create(user=request.user)
+    dzis = timezone.localdate(); profil, _ = UserProfile.objects.get_or_create(user=request.user)
     nagrody = Reward.objects.filter(is_active=True, stock_quantity__gt=0).order_by("cost_points")
     nagrody = [n for n in nagrody if not n.valid_until or n.valid_until >= dzis]
     return render(request, "quiz/reward_list.html", {"profil": profil, "nagrody": nagrody})
@@ -163,19 +173,26 @@ def lista_nagrod(request):
 def odbierz_nagrode(request, id_nagrody):
     with transaction.atomic():
         nagroda = get_object_or_404(Reward.objects.select_for_update(), id=id_nagrody, is_active=True)
-        profil, _ = UserProfile.objects.get_or_create(user=request.user)
-        profil = UserProfile.objects.select_for_update().get(id=profil.id)
-        if nagroda.stock_quantity <= 0:
+        profil, _ = UserProfile.objects.get_or_create(user=request.user); profil = UserProfile.objects.select_for_update().get(id=profil.id)
+        if nagroda.stock_quantity <= 0 or (nagroda.valid_until and nagroda.valid_until < timezone.localdate()):
             messages.error(request, "Nagroda jest niedostępna."); return redirect("lista_nagrod")
-        if nagroda.valid_until and nagroda.valid_until < timezone.localdate():
-            messages.error(request, "Termin ważności nagrody minął."); return redirect("lista_nagrod")
         if profil.points < nagroda.cost_points:
             messages.error(request, "Masz za mało punktów."); return redirect("lista_nagrod")
-        koszt = nagroda.cost_points
-        profil.points -= koszt; profil.save(update_fields=["points"])
-        nagroda.stock_quantity -= 1; nagroda.save(update_fields=["stock_quantity"])
-        RewardRedemption.objects.create(user=request.user, reward=nagroda, cost_points=koszt)
+        koszt = nagroda.cost_points; profil.points -= koszt; profil.save(update_fields=["points"]); nagroda.stock_quantity -= 1; nagroda.save(update_fields=["stock_quantity"])
+        if nagroda.delivery_method == "EMAIL":
+            kod = generuj_kod_nagrody(); status = "EMAIL_PENDING"
+        else:
+            kod = None; status = "ADDRESS_REQUIRED"
+        realizacja = RewardRedemption.objects.create(user=request.user, reward=nagroda, cost_points=koszt, delivery_method=nagroda.delivery_method, redemption_code=kod, status=status)
         PointTransaction.objects.create(user=request.user, points=-koszt, transaction_type="reward", description="Nagroda: " + nagroda.name)
+    if realizacja.delivery_method == "EMAIL":
+        try:
+            wyslane = send_mail("Twoja nagroda w Quiz App", "Kod nagrody: " + realizacja.redemption_code, settings.DEFAULT_FROM_EMAIL, [request.user.email], using="default") == 1
+        except Exception:
+            wyslane = False
+        realizacja.status = "SENT" if wyslane else "EMAIL_FAILED"
+        if wyslane: realizacja.email_sent_at = timezone.now()
+        realizacja.save(update_fields=["status", "email_sent_at"])
     messages.success(request, "Nagroda została odebrana.")
     return redirect("historia_nagrod")
 
@@ -184,3 +201,14 @@ def odbierz_nagrode(request, id_nagrody):
 def historia_nagrod(request):
     realizacje = RewardRedemption.objects.filter(user=request.user).select_related("reward").order_by("-redeemed_at")
     return render(request, "quiz/reward_history.html", {"realizacje_nagrod": realizacje})
+
+
+@login_required(login_url="logowanie")
+def adres_wysylki(request, id_realizacji):
+    realizacja = get_object_or_404(RewardRedemption, id=id_realizacji, user=request.user, delivery_method="SHIPPING")
+    if request.method == "POST":
+        formularz = FormularzAdresuWysylki(request.POST, instance=realizacja)
+        if formularz.is_valid():
+            realizacja = formularz.save(commit=False); realizacja.status = "READY_TO_SHIP"; realizacja.shipping_address_submitted_at = timezone.now(); realizacja.save(); messages.success(request, "Adres został zapisany."); return redirect("historia_nagrod")
+    else: formularz = FormularzAdresuWysylki(instance=realizacja)
+    return render(request, "quiz/shipping_address.html", {"formularz": formularz, "realizacja": realizacja})

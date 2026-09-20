@@ -26,3 +26,19 @@ class FormularzLogowania(AuthenticationForm):
         self.fields["password"].label = "Hasło"
         for pole in self.fields.values():
             pole.widget.attrs["class"] = "form-control"
+
+
+from .models import RewardRedemption
+
+
+class FormularzAdresuWysylki(forms.ModelForm):
+    class Meta:
+        model = RewardRedemption
+        fields = ["shipping_first_name", "shipping_last_name", "shipping_street", "shipping_house_number", "shipping_apartment_number", "shipping_postal_code", "shipping_city", "shipping_country", "shipping_phone"]
+        labels = {"shipping_first_name":"Imię","shipping_last_name":"Nazwisko","shipping_street":"Ulica","shipping_house_number":"Numer domu","shipping_apartment_number":"Numer mieszkania","shipping_postal_code":"Kod pocztowy","shipping_city":"Miejscowość","shipping_country":"Kraj","shipping_phone":"Numer telefonu"}
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        wymagane = ["shipping_first_name","shipping_last_name","shipping_street","shipping_house_number","shipping_postal_code","shipping_city","shipping_country","shipping_phone"]
+        for nazwa, pole in self.fields.items():
+            pole.widget.attrs["class"] = "form-control"
+            if nazwa in wymagane: pole.required = True

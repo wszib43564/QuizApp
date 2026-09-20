@@ -1,0 +1,29 @@
+{% extends 'quiz/base.html' %}
+
+{% block content %}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+
+            <div class="card">
+                <div class="card-body p-4">
+
+                    <h2>Adres do wysyłki</h2>
+                    <p>Nagroda: <strong>{{ realizacja.reward.name }}</strong></p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ formularz.as_p }}
+
+                        <button class="btn btn-primary w-100">Zapisz adres</button>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

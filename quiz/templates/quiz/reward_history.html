@@ -4,18 +4,36 @@
 <div class="container py-5">
     <h2>Moje nagrody</h2>
 
-    <div class="card">
-        <div class="card-body">
+    <div class="row g-3">
 
-            {% for r in realizacje_nagrod %}
-                <div class="border-bottom py-2">
-                    <strong>{{ r.reward.name }}</strong> — {{ r.cost_points }} pkt — {{ r.redeemed_at|date:"d.m.Y H:i" }}
+        {% for r in realizacje_nagrod %}
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+
+                    <h4>{{ r.reward.name }}</h4>
+                    <p>Koszt: {{ r.cost_points }} pkt</p>
+                    <p>Status: <strong>{{ r.get_status_display }}</strong></p>
+
+                    {% if r.delivery_method == 'EMAIL' %}
+                        <p>Kod: <strong>{{ r.redemption_code }}</strong></p>
+
+                    {% elif r.status == 'ADDRESS_REQUIRED' %}
+                        <a class="btn btn-primary" href="{% url 'adres_wysylki' r.id %}">Uzupełnij adres</a>
+
+                    {% elif r.status == 'READY_TO_SHIP' %}
+                        <a class="btn btn-outline-primary" href="{% url 'adres_wysylki' r.id %}">Edytuj adres</a>
+                    {% endif %}
+
                 </div>
-            {% empty %}
-                <p>Brak odebranych nagród.</p>
-            {% endfor %}
-
+            </div>
         </div>
+
+        {% empty %}
+            <p>Brak nagród.</p>
+        {% endfor %}
+
     </div>
 </div>
 

@@ -18,9 +18,8 @@
 
                     <h4>{{ n.name }}</h4>
                     <p>{{ n.description }}</p>
-
-                    <p>Koszt: <strong>{{ n.cost_points }} pkt</strong></p>
-                    <p>Stan: {{ n.stock_quantity }}</p>
+                    <p><strong>{{ n.cost_points }} pkt</strong> | stan: {{ n.stock_quantity }}</p>
+                    <p>{{ n.get_delivery_method_display }}</p>
 
                     {% if n.valid_until %}
                         <p>Ważna do: {{ n.valid_until|date:"d.m.Y" }}</p>
@@ -36,7 +35,7 @@
         </div>
 
         {% empty %}
-            <p>Brak dostępnych nagród.</p>
+            <p>Brak nagród.</p>
         {% endfor %}
 
     </div>
