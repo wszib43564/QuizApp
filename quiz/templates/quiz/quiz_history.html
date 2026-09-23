@@ -1,21 +1,86 @@
 {% extends 'quiz/base.html' %}
+{% block title %}Historia quizów - Quiz App{% endblock %}
+
 {% block content %}
 
 <div class="container py-5">
-    <h2>Historia quizów</h2>
+
+    <div class="naglowek-strony">
+        <h2>Historia quizów</h2>
+        <p class="text-secondary">Wszystkie zakończone podejścia.</p>
+    </div>
+
     <div class="card">
         <div class="card-body">
-            {% for p in podejscia %}
-            <div class="border-bottom py-2">
 
-                <strong>{{ p.quiz.title }}</strong> — {% if p.score != None %}{{ p.score }}{% else %}{{ p.point_score }}{% endif %} pkt — {{ p.completed_at|date:"d.m.Y H:i" }}
-            
-            </div>{% empty %}
-            
-            <p>Brak podejść.</p>
-            
-            {% endfor %}
+            {% if podejscia %}
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Quiz</th>
+                            <th>Poprawne</th>
+                            <th>Błędne</th>
+                            <th>Wynik</th>
+                            <th>Zmiana salda</th>
+                            <th>Próba</th>
+                            <th>Data</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for podejscie in podejscia %}
+                        <tr>
+                            <td>{{ podejscie.quiz.title }}</td>
+                            <td>{{ podejscie.correct_answers }}</td>
+                            <td>{{ podejscie.incorrect_answers }}</td>
+
+                            <td>
+                                {% if podejscie.point_score > 0 %}
+                                    <span class="text-success fw-bold">+{{ podejscie.point_score }} pkt</span>
+                                {% elif podejscie.point_score < 0 %}
+                                    <span class="text-danger fw-bold">{{ podejscie.point_score }} pkt</span>
+                                {% else %}
+                                    0 pkt
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if podejscie.balance_change > 0 %}
+                                    +{{ podejscie.balance_change }}
+                                {% else %}
+                                    {{ podejscie.balance_change }}
+                                {% endif %}
+                                pkt
+                            </td>
+
+                            <td>
+                                {% if podejscie.is_rewarded_attempt %}
+                                    <span class="badge bg-success">Punktowana</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Niepunktowana</span>
+                                {% endif %}
+
+                                {% if podejscie.finish_reason == 'QUIZ_TIMEOUT' %}
+                                    <span class="badge bg-warning text-dark">Timeout</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ podejscie.completed_at|date:"d.m.Y H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% else %}
+                <div class="alert alert-info mb-0">Nie rozwiązałeś jeszcze żadnego quizu.</div>
+            {% endif %}
+
         </div>
     </div>
+
 </div>
+
 {% endblock %}

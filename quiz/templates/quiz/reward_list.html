@@ -1,41 +1,74 @@
 {% extends 'quiz/base.html' %}
+{% block title %}Nagrody - Quiz App{% endblock %}
+
 {% block content %}
 
 <div class="container py-5">
 
-    <div class="d-flex justify-content-between">
-        <h2>Nagrody</h2>
-        <strong>{{ profil.points }} pkt</strong>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div>
+            <h2>Nagrody</h2>
+            <p class="text-secondary mb-0">Wymieniaj zdobyte punkty na dostępne nagrody.</p>
+        </div>
+
+        <div class="card px-4 py-3 mt-3 mt-md-0">
+            <small class="text-secondary">Twoje saldo</small>
+            <div class="wartosc-statystyki">{{ profil.points }} pkt</div>
+        </div>
     </div>
 
-    <div class="row g-3 mt-1">
+    <div class="row g-4">
 
-        {% for n in nagrody %}
+        {% for nagroda in nagrody %}
 
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body">
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 karta-nagrody">
 
-                    <h4>{{ n.name }}</h4>
-                    <p>{{ n.description }}</p>
-                    <p><strong>{{ n.cost_points }} pkt</strong> | stan: {{ n.stock_quantity }}</p>
-                    <p>{{ n.get_delivery_method_display }}</p>
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between gap-2 mb-3">
+                        <h4 class="mb-0">{{ nagroda.name }}</h4>
+                        <span class="badge bg-success">Dostępna</span>
+                    </div>
 
-                    {% if n.valid_until %}
-                        <p>Ważna do: {{ n.valid_until|date:"d.m.Y" }}</p>
+                    <p class="text-secondary">{{ nagroda.description }}</p>
+                    <div class="koszt-nagrody mb-3">{{ nagroda.cost_points }} pkt</div>
+
+                    <p class="mb-2">Dostępne sztuki: <strong>{{ nagroda.stock_quantity }}</strong></p>
+                    <p class="mb-2">Realizacja: <strong>{{ nagroda.get_delivery_method_display }}</strong></p>
+
+                    {% if nagroda.valid_until %}
+                        <p class="mb-0">Ważna do: <strong>{{ nagroda.valid_until|date:"d.m.Y" }}</strong></p>
+                    {% else %}
+                        <p class="text-secondary mb-0">Bez terminu ważności</p>
                     {% endif %}
+                </div>
 
-                    <form method="post" action="{% url 'odbierz_nagrode' n.id %}">
-                        {% csrf_token %}
-                        <button class="btn btn-success" {% if profil.points < n.cost_points %}disabled{% endif %}>Odbierz</button>
-                    </form>
+                <div class="card-footer bg-white border-0 p-4 pt-0">
+
+                    {% if profil.points >= nagroda.cost_points %}
+                        <form method="post" action="{% url 'odbierz_nagrode' nagroda.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success w-100">Odbierz nagrodę</button>
+                        </form>
+                    {% else %}
+                        <button class="btn btn-secondary w-100" disabled>Za mało punktów</button>
+                    {% endif %}
 
                 </div>
             </div>
         </div>
 
         {% empty %}
-            <p>Brak nagród.</p>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center p-5">
+                    <h4>Brak dostępnych nagród</h4>
+                    <p class="text-secondary mb-0">Obecnie nie ma nagród dostępnych do odebrania.</p>
+                </div>
+            </div>
+        </div>
+
         {% endfor %}
 
     </div>

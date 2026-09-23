@@ -1,48 +1,220 @@
 {% extends 'quiz/base.html' %}
+{% block title %}{{ quiz.title }} - Quiz App{% endblock %}
+
 {% block content %}
 
 <div class="container py-5">
-    <div class="card">
-        <div class="card-body p-4">
-            <div class="d-flex justify-content-between">
-                <span>Pytanie {{ numer }}/{{ liczba_pytan }}</span>
-                <span>Quiz: <strong id="qt">{{ pozostaly_czas_quizu }}</strong>s | Pytanie: <strong id="pt">{{ pozostaly_czas_pytania }}</strong>s</span>
-            
+
+    <div class="obszar-quizu">
+
+        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+            <div>
+                <h3>{{ quiz.title }}</h3>
+                <p class="text-secondary mb-0">Pytanie {{ numer_pytania }} z {{ liczba_pytan }}</p>
             </div>
-            <h3 class="mt-3">{{ pytanie.text }}</h3>
-            
-            <form method="post" id="answerForm">
-                {% csrf_token %}
-                
-                <input type="hidden" name="timeout" id="timeout" value="0">
-                
-                {% for odpowiedz in pytanie.answer_set.all %}
-                
-                <div class="form-check my-3">
-                    <input class="form-check-input" type="radio" name="odpowiedz" value="{{ odpowiedz.id }}" id="o{{ odpowiedz.id }}">
-                    <label class="form-check-label" for="o{{ odpowiedz.id }}">{{ odpowiedz.text }}</label>
-                                    
-                </div>{% endfor %}<button class="btn btn-primary">Dalej</button>
-            </form>
+
+            {% if podejscie.is_rewarded_attempt %}
+                <span class="badge bg-success">Próba punktowana</span>
+            {% else %}
+                <span class="badge bg-secondary">Próba niepunktowana</span>
+            {% endif %}
         </div>
+
+        <div class="progress mb-4">
+            <div class="progress-bar" id="postep-quizu" role="progressbar"
+                 data-postep="{% widthratio numer_pytania liczba_pytan 100 %}"
+                 aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+
+        <div class="row g-3 mb-4">
+
+            {% if not informacja_zwrotna %}
+            <div class="col-md-6">
+                <div class="karta-czasu">
+                    <div class="etykieta-czasu">Czas na pytanie</div>
+                    <div class="wartosc-czasu" id="licznik-pytania"
+                         data-sekundy="{{ pozostaly_czas_pytania }}">00:00</div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="{% if informacja_zwrotna %}col-12{% else %}col-md-6{% endif %}">
+                <div class="karta-czasu">
+                    <div class="etykieta-czasu">Czas całego quizu</div>
+                    <div class="wartosc-czasu" id="licznik-quizu"
+                         data-sekundy="{{ pozostaly_czas_quizu }}">00:00</div>
+                </div>
+            </div>
+
+        </div>
+
+        {% if informacja_zwrotna %}
+
+        <div class="card">
+            <div class="card-body p-4 p-md-5">
+
+                <div class="tresc-pytania mb-4">{{ informacja_zwrotna.question_text }}</div>
+
+                {% if informacja_zwrotna.timed_out %}
+                    <div class="alert alert-warning">Czas na odpowiedź minął.</div>
+                {% elif informacja_zwrotna.is_correct %}
+                    <div class="alert alert-success">Poprawna odpowiedź.</div>
+                {% else %}
+                    <div class="alert alert-danger">Niepoprawna odpowiedź.</div>
+                {% endif %}
+
+                {% if not informacja_zwrotna.is_correct %}
+                    <p>Poprawna odpowiedź: <strong>{{ informacja_zwrotna.correct_answer }}</strong></p>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="next">
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        {% if numer_pytania == liczba_pytan %}Zobacz wynik{% else %}Następne pytanie{% endif %}
+                    </button>
+                </form>
+
+            </div>
+        </div>
+
+        {% else %}
+
+        <div class="card karta-pytania">
+            <div class="card-body p-4 p-md-5">
+
+                <div class="tresc-pytania mb-4">{{ pytanie.text }}</div>
+
+                {% if blad %}
+                    <div class="alert alert-danger">{{ blad }}</div>
+                {% endif %}
+
+                <form method="post" id="formularz-odpowiedzi">
+                    {% csrf_token %}
+
+                    <input type="hidden" name="question_index" value="{{ numer_pytania|add:'-1' }}">
+                    <input type="hidden" name="timeout" value="0" id="pole-uplywu-czasu-pytania">
+
+                    {% for odpowiedz in pytanie.answer_set.all %}
+                    <label class="opcja-odpowiedzi" for="odpowiedz{{ odpowiedz.id }}">
+                        <input class="form-check-input" type="radio" name="answer"
+                               value="{{ odpowiedz.id }}" id="odpowiedz{{ odpowiedz.id }}">
+                        <span>{{ odpowiedz.text }}</span>
+                    </label>
+                    {% endfor %}
+
+                    <button type="submit" class="btn btn-primary w-100 mt-4">Odpowiedz</button>
+                </form>
+
+            </div>
+        </div>
+
+        {% endif %}
+
     </div>
 </div>
 
-<script>
-    let q = {{ pozostaly_czas_quizu }};
-    let p = {{ pozostaly_czas_pytania }};
 
-    const t = setInterval(() => {
-        q--;
-        p--;
-        document.getElementById('qt').textContent = Math.max(0, q);
-        document.getElementById('pt').textContent = Math.max(0, p);
-        if (q <= 0 || p <= 0) {
-            clearInterval(t);
-            document.getElementById('timeout').value = '1';
-            document.getElementById('answerForm').submit();
+<form method="post" id="formularz-uplywu-czasu-quizu" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="quiz_timeout">
+</form>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const pasekPostepu = document.getElementById('postep-quizu');
+
+    if (pasekPostepu) {
+        const wartoscPostepu = Number(pasekPostepu.dataset.postep || 0);
+        pasekPostepu.style.width = wartoscPostepu + '%';
+        pasekPostepu.setAttribute('aria-valuenow', wartoscPostepu);
+    }
+
+    const licznikQuizu = document.getElementById('licznik-quizu');
+    const licznikPytania = document.getElementById('licznik-pytania');
+    const formularzOdpowiedzi = document.getElementById('formularz-odpowiedzi');
+    const poleUplywuCzasuPytania = document.getElementById('pole-uplywu-czasu-pytania');
+    const formularzUplywuCzasuQuizu = document.getElementById('formularz-uplywu-czasu-quizu');
+
+    let formularzWyslany = false;
+
+    function formatujCzas(sekundy) {
+        sekundy = Math.max(0, sekundy);
+
+        const minuty = Math.floor(sekundy / 60);
+        const pozostaleSekundy = sekundy % 60;
+
+        return String(minuty).padStart(2, '0') + ':' +
+               String(pozostaleSekundy).padStart(2, '0');
+    }
+
+    function uruchomLicznik(element, funkcjaPoCzasie) {
+        if (!element) return;
+
+        const wartoscSekund = element.dataset.sekundy;
+
+        if (wartoscSekund === undefined || wartoscSekund === '') {
+            console.error('Brak wartości data-sekundy dla licznika.');
+            return;
         }
-    }, 1000);
+
+        let pozostalyCzas = Number(wartoscSekund);
+
+        if (Number.isNaN(pozostalyCzas)) {
+            console.error('Nieprawidłowa wartość licznika:', wartoscSekund);
+            return;
+        }
+
+        function odswiezLicznik() {
+            element.textContent = formatujCzas(pozostalyCzas);
+
+            if (pozostalyCzas <= 0) {
+                funkcjaPoCzasie();
+                return false;
+            }
+
+            pozostalyCzas--;
+            return true;
+        }
+
+        if (!odswiezLicznik()) return;
+
+        const interwal = setInterval(function () {
+            if (!odswiezLicznik()) clearInterval(interwal);
+        }, 1000);
+    }
+
+    function wyslijKoniecCzasuQuizu() {
+        if (formularzWyslany) return;
+
+        formularzWyslany = true;
+
+        if (formularzUplywuCzasuQuizu) {
+            formularzUplywuCzasuQuizu.submit();
+        }
+    }
+
+    function wyslijKoniecCzasuPytania() {
+        if (formularzWyslany) return;
+        if (!formularzOdpowiedzi || !poleUplywuCzasuPytania) return;
+
+        formularzWyslany = true;
+        poleUplywuCzasuPytania.value = '1';
+        formularzOdpowiedzi.submit();
+    }
+
+    if (formularzOdpowiedzi) {
+        formularzOdpowiedzi.addEventListener('submit', function () {
+            formularzWyslany = true;
+        });
+    }
+
+    uruchomLicznik(licznikQuizu, wyslijKoniecCzasuQuizu);
+    uruchomLicznik(licznikPytania, wyslijKoniecCzasuPytania);
+});
 </script>
 
 {% endblock %}

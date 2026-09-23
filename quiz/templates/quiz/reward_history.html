@@ -1,37 +1,98 @@
 {% extends 'quiz/base.html' %}
+{% block title %}Moje nagrody - Quiz App{% endblock %}
+
 {% block content %}
 
 <div class="container py-5">
-    <h2>Moje nagrody</h2>
 
-    <div class="row g-3">
+    <div class="naglowek-strony">
+        <h2>Moje nagrody</h2>
+        <p class="text-secondary">Nagrody wymienione za zdobyte punkty.</p>
+    </div>
 
-        {% for r in realizacje_nagrod %}
+    <div class="row g-4">
+
+        {% for realizacja in realizacje_nagrod %}
 
         <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
+            <div class="card h-100">
+                <div class="card-body p-4">
 
-                    <h4>{{ r.reward.name }}</h4>
-                    <p>Koszt: {{ r.cost_points }} pkt</p>
-                    <p>Status: <strong>{{ r.get_status_display }}</strong></p>
+                    <div class="d-flex justify-content-between gap-3">
+                        <div>
+                            <h4>{{ realizacja.reward.name }}</h4>
+                            <p class="text-secondary">Koszt: {{ realizacja.cost_points }} pkt</p>
+                        </div>
 
-                    {% if r.delivery_method == 'EMAIL' %}
-                        <p>Kod: <strong>{{ r.redemption_code }}</strong></p>
+                        <div>
+                            {% if realizacja.status == 'SENT' %}
+                                <span class="badge bg-success">Wysłana e-mailem</span>
+                            {% elif realizacja.status == 'EMAIL_FAILED' %}
+                                <span class="badge bg-danger">Błąd e-maila</span>
+                            {% elif realizacja.status == 'ADDRESS_REQUIRED' %}
+                                <span class="badge bg-warning text-dark">Uzupełnij adres</span>
+                            {% elif realizacja.status == 'READY_TO_SHIP' %}
+                                <span class="badge bg-info text-dark">Przygotowywana</span>
+                            {% elif realizacja.status == 'SHIPPED' %}
+                                <span class="badge bg-success">Wysłana</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ realizacja.get_status_display }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
 
-                    {% elif r.status == 'ADDRESS_REQUIRED' %}
-                        <a class="btn btn-primary" href="{% url 'adres_wysylki' r.id %}">Uzupełnij adres</a>
+                    {% if realizacja.delivery_method == 'EMAIL' %}
 
-                    {% elif r.status == 'READY_TO_SHIP' %}
-                        <a class="btn btn-outline-primary" href="{% url 'adres_wysylki' r.id %}">Edytuj adres</a>
+                        <hr>
+                        <p class="text-secondary mb-2">Kod nagrody</p>
+                        <div class="kod-nagrody">{{ realizacja.redemption_code }}</div>
+
+                        {% if realizacja.status == 'EMAIL_FAILED' %}
+                            <div class="alert alert-warning mt-3 mb-0">Nie udało się wysłać e-maila, ale kod jest zapisany na Twoim koncie.</div>
+                        {% endif %}
+
+                    {% else %}
+
+                        <hr>
+
+                        {% if realizacja.status == 'ADDRESS_REQUIRED' %}
+                            <div class="alert alert-warning">Aby otrzymać tę nagrodę, uzupełnij adres do wysyłki.</div>
+                            <a href="{% url 'adres_wysylki' realizacja.id %}" class="btn btn-primary">Uzupełnij adres</a>
+
+                        {% elif realizacja.status == 'READY_TO_SHIP' %}
+                            <p><strong>Nagroda oczekuje na wysyłkę.</strong></p>
+                            <p class="text-secondary">Adres został zapisany.</p>
+                            <a href="{% url 'adres_wysylki' realizacja.id %}" class="btn btn-outline-secondary">Edytuj adres</a>
+
+                        {% elif realizacja.status == 'SHIPPED' %}
+                            <div class="alert alert-success">Nagroda została wysłana.</div>
+
+                            {% if realizacja.tracking_number %}
+                                <p class="mb-1">Numer przesyłki:</p>
+                                <strong>{{ realizacja.tracking_number }}</strong>
+                            {% endif %}
+                        {% endif %}
+
                     {% endif %}
+
+                    <hr>
+                    <small class="text-secondary">Wymiana punktów: {{ realizacja.redeemed_at|date:"d.m.Y H:i" }}</small>
 
                 </div>
             </div>
         </div>
 
         {% empty %}
-            <p>Brak nagród.</p>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center p-5">
+                    <h4>Nie masz jeszcze żadnych nagród</h4>
+                    <a href="{% url 'lista_nagrod' %}" class="btn btn-primary mt-3">Zobacz dostępne nagrody</a>
+                </div>
+            </div>
+        </div>
+
         {% endfor %}
 
     </div>

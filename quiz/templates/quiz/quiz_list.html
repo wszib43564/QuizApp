@@ -1,47 +1,85 @@
 {% extends 'quiz/base.html' %}
+{% block title %}Quizy - Quiz App{% endblock %}
+
 {% block content %}
 
 <div class="container py-5">
-    <h2>Quizy</h2>
 
-    <div class="row g-3">
+    <div class="naglowek-strony">
+        <h2>Dostępne quizy</h2>
+        <p class="text-secondary">Wybierz quiz, który chcesz rozwiązać.</p>
+    </div>
+
+    <div class="row g-4">
+
         {% for element in elementy_quizow %}
-        <div class="col-md-6">
-            
-            <div class="card">
-                <div class="card-body">
-                    <h4>{{ element.quiz.title }}</h4>
-                    <p>{{ element.quiz.description }}</p>
-                    <p>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 karta-quizu">
+
+                <div class="card-body p-4">
+
+                    <div class="d-flex justify-content-between gap-2 mb-3">
+                        <h4 class="mb-0">{{ element.quiz.title }}</h4>
+
                         {% if element.bedzie_punktowane %}
-                        
-                        <span class="badge bg-success">Podejście punktowane</span>
-                        
-                        {% else %}<span class="badge bg-secondary">
-                            
-                            Bez zmiany salda</span>
-                            
-                            {% endif %}</p>
-                            
-                            <form method="post" action="{% url 'rozpocznij_quiz' element.quiz.id %}">
-                                
-                                {% csrf_token %}
-                                
-                                <button class="btn btn-primary">
-                                    {% if element.ma_aktywne_podejscie %}Kontynuuj{% else %}Rozpocznij{% endif %}
-                                </button>
-                            </form>
-                        </div>
+                            <span class="badge bg-success">Punktowana</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Bez salda</span>
+                        {% endif %}
                     </div>
+
+                    <p class="text-secondary">{{ element.quiz.description }}</p>
+
+                    <div class="informacje-quizu">
+                        <span>Pytań: <strong>{{ element.quiz.question_set.count }}</strong></span>
+                        <span>Czas: <strong>{{ element.quiz.time_limit_seconds }} s</strong></span>
+                    </div>
+
+                    <div class="mt-3">
+                        {% if element.quiz.expires_at %}
+                            <small class="text-secondary">Dostępny do: <strong>{{ element.quiz.expires_at|date:"d.m.Y H:i" }}</strong></small>
+                        {% else %}
+                            <small class="text-secondary">Bez terminu wygaśnięcia</small>
+                        {% endif %}
+                    </div>
+
+                    {% if element.wygasl and element.ma_aktywne_podejscie %}
+                        <div class="alert alert-info mt-3 mb-0">Termin rozpoczęcia quizu już minął, ale możesz dokończyć rozpoczęte podejście.</div>
+                    {% endif %}
+
+                    {% if element.ma_aktywne_podejscie %}
+                        <div class="alert alert-warning mt-3 mb-0">Masz rozpoczęte podejście do tego quizu.</div>
+                    {% endif %}
+
                 </div>
-                
-                {% empty %}
-                
-                <p>Brak quizów.</p>
-                
-                {% endfor %}
-            
+
+                <div class="card-footer bg-white border-0 p-4 pt-0">
+                    <form method="post" action="{% url 'rozpocznij_quiz' element.quiz.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary w-100">
+                            {% if element.ma_aktywne_podejscie %}Kontynuuj quiz{% else %}Rozpocznij quiz{% endif %}
+                        </button>
+                    </form>
+                </div>
+
             </div>
         </div>
+
+        {% empty %}
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center p-5">
+                    <h4>Brak dostępnych quizów</h4>
+                    <p class="text-secondary mb-0">Administrator nie udostępnił jeszcze żadnego quizu.</p>
+                </div>
+            </div>
+        </div>
+
+        {% endfor %}
+
+    </div>
+</div>
 
 {% endblock %}

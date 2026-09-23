@@ -1,27 +1,68 @@
 {% extends 'quiz/base.html' %}
+{% block title %}Punkty - Quiz App{% endblock %}
+
 {% block content %}
 
 <div class="container py-5">
-    <h2>Punkty</h2>
-    
-    <div class="card mb-4">
-        <div class="card-body">
-            <h3>{{ profil.points }} pkt</h3>
-        </div></div><div class="card">
-            
-            <div class="card-body">
-                <h4>Historia transakcji</h4>
-                {% for t in transakcje %}
-                
-                <div class="border-bottom py-2">
-                    <strong>{{ t.points }} pkt</strong> — {{ t.description }} 
-                    <small class="text-secondary">{{ t.created_at|date:"d.m.Y H:i" }}</small>
-                </div>{% empty %}
-                
-                <p>Brak transakcji.</p>
-                
-                {% endfor %}
-            </div>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div>
+            <h2>Punkty</h2>
+            <p class="text-secondary mb-0">Historia zmian Twojego salda.</p>
+        </div>
+
+        <div class="card px-4 py-3 mt-3 mt-md-0">
+            <small class="text-secondary">Aktualne saldo</small>
+            <div class="wartosc-statystyki">{{ profil.points }} pkt</div>
         </div>
     </div>
+
+    <div class="card">
+        <div class="card-body">
+
+            {% if transakcje %}
+
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Zmiana</th>
+                            <th>Typ</th>
+                            <th>Opis</th>
+                            <th>Data</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for transakcja in transakcje %}
+                        <tr>
+                            <td>
+                                {% if transakcja.points > 0 %}
+                                    <span class="text-success fw-bold">+{{ transakcja.points }} pkt</span>
+                                {% elif transakcja.points < 0 %}
+                                    <span class="text-danger fw-bold">{{ transakcja.points }} pkt</span>
+                                {% else %}
+                                    0 pkt
+                                {% endif %}
+                            </td>
+
+                            <td>{{ transakcja.transaction_type }}</td>
+                            <td>{{ transakcja.description }}</td>
+                            <td>{{ transakcja.created_at|date:"d.m.Y H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+            {% else %}
+                <p class="text-secondary mb-0">Brak transakcji punktowych.</p>
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+
 {% endblock %}

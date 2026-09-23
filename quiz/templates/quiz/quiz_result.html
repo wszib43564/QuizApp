@@ -1,27 +1,103 @@
 {% extends 'quiz/base.html' %}
+{% block title %}Wynik quizu - Quiz App{% endblock %}
+
 {% block content %}
 
 <div class="container py-5">
-    <div class="card">
-        <div class="card-body p-5">
-            
-            <h2>Wynik</h2><p>Quiz: <strong>{{ podejscie.quiz.title }}</strong></p>
-            
-            <p>Poprawne: {{ podejscie.correct_answers }} | Błędne: {{ podejscie.incorrect_answers }}</p>
-            
-            <p>Wynik: <strong>{{ podejscie.point_score }} pkt</strong></p>
-            
-            <p>Zmiana salda: <strong>{{ podejscie.balance_change }} pkt</strong></p>
-            
-            {% if not podejscie.is_rewarded_attempt %}
-            
-            <div class="alert alert-info">
-                To kolejne podejście, dlatego wynik nie zmienia salda punktów.
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <div class="card">
+                <div class="card-body p-4 p-md-5 text-center">
+
+                    <span class="ikona-wyniku">✓</span>
+                    <h2 class="mt-3">Quiz zakończony</h2>
+                    <p class="text-secondary mb-4">{{ quiz.title }}</p>
+
+                    {% if podejscie.finish_reason == 'QUIZ_TIMEOUT' %}
+                        <div class="alert alert-warning">Quiz został zakończony z powodu przekroczenia limitu czasu.</div>
+                    {% endif %}
+
+                    <div class="row g-3 my-4">
+
+                        <div class="col-md-4">
+                            <div class="pole-wyniku">
+                                <div class="liczba-wyniku text-success">{{ podejscie.correct_answers }}</div>
+                                <small>Poprawne</small>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="pole-wyniku">
+                                <div class="liczba-wyniku text-danger">{{ podejscie.incorrect_answers }}</div>
+                                <small>Błędne / bez odpowiedzi</small>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="pole-wyniku">
+                                <div class="liczba-wyniku">{{ podejscie.total_questions }}</div>
+                                <small>Wszystkie pytania</small>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <hr>
+
+                    <p class="mt-4 mb-1 text-secondary">Punkty dodane do salda</p>
+
+                    <h1 class="display-5 fw-bold">
+                        {% if podejscie.balance_change > 0 %}
+                            +{{ podejscie.balance_change }}
+                        {% else %}
+                            {{ podejscie.balance_change }}
+                        {% endif %}
+                        pkt
+                    </h1>
+
+                    {% if podejscie.is_rewarded_attempt %}
+
+                        <div class="alert alert-success mt-4">
+                            To było pierwsze punktowane podejście do tego quizu.<br>
+
+                            Wynik quizu:
+                            {% if podejscie.point_score > 0 %}
+                                +{{ podejscie.point_score }}
+                            {% else %}
+                                {{ podejscie.point_score }}
+                            {% endif %}
+                            pkt.
+                        </div>
+
+                    {% else %}
+
+                        <div class="alert alert-secondary mt-4">
+                            <strong>Próba niepunktowana.</strong><br>
+
+                            Wynik uzyskany w quizie:
+                            {% if podejscie.point_score > 0 %}
+                                +{{ podejscie.point_score }}
+                            {% else %}
+                                {{ podejscie.point_score }}
+                            {% endif %}
+                            pkt. Saldo nie zostało zmienione.
+                        </div>
+
+                    {% endif %}
+
+                    <p>Aktualne saldo: <strong>{{ profil.points }} pkt</strong></p>
+
+                    <div class="d-flex justify-content-center gap-2 flex-wrap mt-4">
+                        <a href="{% url 'lista_quizow' %}" class="btn btn-primary">Wróć do quizów</a>
+                        <a href="{% url 'historia_quizow' %}" class="btn btn-outline-secondary">Historia</a>
+                    </div>
+
+                </div>
             </div>
-            
-            {% endif %}
-            <a class="btn btn-primary" href="{% url 'lista_quizow' %}">Wróć</a>
+
         </div>
     </div>
 </div>
+
 {% endblock %}

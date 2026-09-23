@@ -1,26 +1,111 @@
 {% extends 'quiz/base.html' %}
+{% block title %}Strona główna - Quiz App{% endblock %}
 {% block content %}
 
 <div class="container py-5">
-    <div class="card">
-        <div class="card-body p-5">
-
-            <h1>Quiz App</h1>
-            
-            {% if user.is_authenticated %}
-            <p>Witaj, <strong>{{ user.username }}</strong>. Masz <strong>{{ profil.points }} pkt</strong>.</p>
-            
-            <div class="d-flex gap-2 flex-wrap">
-                <a class="btn btn-primary" href="{% url 'lista_quizow' %}">Rozwiąż quiz</a>
-                <a class="btn btn-outline-primary" href="{% url 'historia_quizow' %}">Historia</a>
-            </div>
-            {% else %}
-
-            <p class="lead">Zaloguj się, aby rozwiązywać quizy i zdobywać punkty.</p>
-            
-            {% endif %}
+    {% if user.is_authenticated %}
+    
+        <div class="naglowek-strony">
+            <h1>Witaj, {{ user.username }}</h1>
+            <p class="text-secondary">Rozwiązuj quizy, zdobywaj punkty i wymieniaj je na nagrody.</p>
         </div>
-    </div>
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="card karta-statystyki h-100">
+                    <div class="card-body">
+                        <small class="text-secondary">Saldo punktów</small>
+                        <div class="wartosc-statystyki">{{ profil.points }} pkt</div>
+                        <a href="{% url 'punkty' %}" class="btn btn-outline-primary mt-3">Historia punktów</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card karta-statystyki h-100">
+                    <div class="card-body">
+                        <small class="text-secondary">Ukończone próby</small>
+                        <div class="wartosc-statystyki">{{ liczba_podejsc }}</div>
+                        <a href="{% url 'historia_quizow' %}" class="btn btn-outline-primary mt-3">Historia quizów</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card karta-statystyki h-100">
+                    <div class="card-body">
+                        <small class="text-secondary">Moje nagrody</small>
+                        <div class="wartosc-statystyki">{{ liczba_odebranych_nagrod }}</div>
+                        <a href="{% url 'historia_nagrod' %}" class="btn btn-outline-primary mt-3">Zobacz nagrody</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h3>Ostatnie wyniki</h3>
+                <p class="text-secondary mb-0">Twoje ostatnie zakończone quizy.</p>
+            </div>
+            <a href="{% url 'lista_quizow' %}" class="btn btn-primary">Rozwiąż quiz</a>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                {% if ostatnie_podejscia %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Quiz</th>
+                                    <th>Wynik</th>
+                                    <th>Zmiana salda</th>
+                                    <th>Data</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for podejscie in ostatnie_podejscia %}
+                                    <tr>
+                                        <td>{{ podejscie.quiz.title }}</td>
+                                        <td>{% if podejscie.point_score > 0 %} +{{ podejscie.point_score }} {% else %} {{ podejscie.point_score }} {% endif %} pkt</td>
+                                        <td>{% if podejscie.balance_change > 0 %} +{{ podejscie.balance_change }} {% else %} {{ podejscie.balance_change }} {% endif %} pkt</td>
+                                        <td>{{ podejscie.completed_at|date:"d.m.Y H:i" }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-secondary mb-0">Nie masz jeszcze zakończonych quizów.</p>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="karta-powitalna">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-7">
+                    <span class="etykieta-powitalna">Quiz App</span>
+                    <h1 class="display-4 fw-bold mt-3">Sprawdź swoją wiedzę i zdobywaj punkty</h1>
+                    <p class="lead text-secondary">Rozwiązuj quizy, obserwuj swoje wyniki i wymieniaj zdobyte punkty na nagrody.</p>
+                    <div class="d-flex gap-2 flex-wrap mt-4">
+                        <a href="{% url 'rejestracja' %}" class="btn btn-primary btn-lg">Załóż konto</a>
+                        <a href="{% url 'logowanie' %}" class="btn btn-outline-primary btn-lg">Zaloguj się</a>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="panel-powitalny">
+                        <div class="mb-4">
+                            <strong>Quizy</strong>
+                            <p class="text-secondary mb-0">Pytania z limitem czasu.</p>
+                        </div>
+                        <div class="mb-4">
+                            <strong>Punkty</strong>
+                            <p class="text-secondary mb-0">+10 za poprawną i -5 za błędną odpowiedź.</p>
+                        </div>
+                        <div>
+                            <strong>Nagrody</strong>
+                            <p class="text-secondary mb-0">Nagrody cyfrowe i fizyczne.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 </div>
 
 {% endblock %}
