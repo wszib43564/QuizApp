@@ -151,6 +151,15 @@ def wyslij_email_z_nagroda(uzytkownik, temat, tresc):
     if not uzytkownik.email:
         return False
 
+    if settings.EMAIL_MODE == "console":
+        print("\n===== QUIZ APP - WIADOMOŚĆ E-MAIL =====")
+        print("Do:", uzytkownik.email)
+        print("Temat:", temat)
+        print()
+        print(tresc)
+        print("=======================================\n")
+        return True
+
     try:
         wynik_wysylki = send_mail(
             subject=temat,
